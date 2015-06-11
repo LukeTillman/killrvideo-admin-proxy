@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1 Not Authorized
+  p
+    | You are logged in but your account does not have access to this resource. If you feel like you've
+    | reached this in error, please try
+    a(href='/logout') logging out
+    | and logging back in as a different user.

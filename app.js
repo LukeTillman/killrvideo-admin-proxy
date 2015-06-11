@@ -1,61 +1,69 @@
 /// <reference path="typings/node/node.d.ts"/>
+var http = require('http');
 var express = require('express');
 var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
+var config = require('./conf');
+var logger = require('./lib/logger');
 
+var requestLogger = require('./middleware/request-logger');
+var subdomainProxy = require('./middleware/subdomain-proxy');
+var cookies = require('./middleware/cookies');
+var session = require('./middleware/session');
+var authentication = require('./middleware/authentication');
+var authorization = require('./middleware/authorization');
+var notAuthorized = require('./middleware/not-authorized');
+var errorHandler = require('./middleware/error-handler');
+
+// The main express app
 var app = express();
 
-// view engine setup
+// Save the main domain for use in templates
+app.locals.domain = config.domain;
+
+// Setup the view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+// Setup request logging
+app.use(requestLogger());
+
+// Route subdomain requests to proxy app
+app.use(subdomainProxy());
+
+// All other requests handled by the main app below here
+
+// Static content
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+// Enable cookie parsing
+app.use(cookies());
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+// Enable sessions
+app.use(session());
+
+// Allow users to authenticate
+app.use(authentication(true));
+
+// Must be authorized to access handlers below
+app.use(authorization());
+
+// Main view for selecting where to go once authorized
+app.get('/', function(req, res, next) {
+    res.render('index');
 });
 
-// error handlers
+// Error Handlers
+app.use(notAuthorized());
+app.use(errorHandler());
 
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
-  });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
+// Start the Web Server
+var httpServer = http.createServer(app);
+httpServer.listen(config.bindPort, config.bindIp, function(err) {
+    if (err) {
+        logger.error("Failed to bind to %s:%d", config.bindIp, config.bindPort);
+        process.exit(1);
+    }
+  
+    logger.info("Listening on %s:%d", config.bindIp, config.bindPort);
 });
-
-
-module.exports = app;
