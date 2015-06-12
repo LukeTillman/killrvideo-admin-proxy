@@ -28,3 +28,8 @@ node_modules
 
 # VS Code settings
 .settings
+
+# Configuration files that might have sensitive stuff in them
+/conf.js
+/conf.*.js
+!/conf.template.js

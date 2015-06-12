@@ -1,4 +1,5 @@
 var logger = require('../lib/logger');
+var _ = require('lodash');
 
 function isAuthorized(req) {
     // Users who aren't logged in aren't authorized
@@ -11,7 +12,10 @@ function isAuthorized(req) {
         return true;
     }
     
-    // TODO: Check GitHub logins
+    // Check GitHub logins
+    if (req.session.auth.github && _.intersection(req.session.auth.github.orgs, ['riptano', 'datastax']).length > 0) {
+        return true;
+    }
     
     return false;
 }

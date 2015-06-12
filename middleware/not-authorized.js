@@ -25,6 +25,6 @@ module.exports = function notAuthorized() {
         }
         
         // Otherwise, they've logged in, but their account doesn't have access so just show a view
-        res.render('notAuthorized');
+        res.render('not-authorized');
     };
 };

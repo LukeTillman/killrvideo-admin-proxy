@@ -2,6 +2,7 @@ var everyauth = require('everyauth');
 var express = require('express');
 var logger = require('../lib/logger');
 var config = require('../conf');
+var _ = require('lodash');
 
 // Create a "user" object used by everyauth and logs the successful login
 function createUserAndLog(accessMethod, emailAddress, additionalData) {
@@ -36,8 +37,31 @@ module.exports = function authentication(setupRoutes) {
             return createUserAndLog('google', googleUserMetadata.email, googleUserMetadata);
         })
         .redirectPath(postLoginPath);
-    
-    // TODO: GitHub authentication
+            
+    // Setup GitHub OAuth authentication
+    everyauth.github
+        .appId(authConfig.github.appId)
+        .appSecret(authConfig.github.appSecret)
+        .scope('user:email,read:org')
+        .findOrCreateUser(function(session, accessToken, accessTokenExtra, githubUserMetadata) {
+            // Create the user from the data that comes back in the initial metadata
+            var user = createUserAndLog('github', githubUserMetadata.email, githubUserMetadata);
+            
+            // GitHub doesn't return orgs in the initial metadata, so we need to make a 2nd call to get them
+            var p = this.Promise();
+            this.oauth.get(this.apiHost() + '/user/orgs', accessToken, function(err, data) {
+                if (err) return p.fail(err);
+                
+                // Store the orgs along with the auth info in session
+                var orgs = JSON.parse(data);
+                session.auth = session.auth || {};
+                session.auth.github = session.auth.github || {};
+                session.auth.github.orgs = _.map(orgs, 'login');    // Use the login property of the returned orgs
+                p.fulfill(user);
+            });
+            return p;
+        })
+        .redirectPath(postLoginPath);
     
     // Lookup user information by just calling back with the userId
     everyauth.everymodule.findUserById(function(userId, callback) {
