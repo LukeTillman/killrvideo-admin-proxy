@@ -1,4 +1,3 @@
-var logger = require('../lib/logger');
 var _ = require('lodash');
 
 function isAuthorized(req) {

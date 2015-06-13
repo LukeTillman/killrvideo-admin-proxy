@@ -6,11 +6,12 @@ var _ = require('lodash');
 
 // Create a "user" object used by everyauth and logs the successful login
 function createUserAndLog(accessMethod, emailAddress, additionalData) {
-    logger.accessLogger.info('Successful login', {
+    var authInfo = {
         loginMethod: accessMethod,
         emailAddress: emailAddress,
         metadata: additionalData
-    });
+    };
+    logger.info({ authInfo: authInfo }, 'Successful authentication');
     return { id: emailAddress };
 }
 

@@ -1,39 +1,35 @@
-var winston = require('winston');
-var morgan = require('morgan');
+var path = require('path');
+var expressBunyan = require('express-bunyan-logger');
 var logger = require('../lib/logger');
 var config = require('../conf');
-
-// Shared file logger for production setups
-var requestFileLogger = new winston.Logger({
-    transports: [
-        new winston.transports.File({
-            level: 'info',
-            filename: './logs/request-logs.log',
-            handleExceptions: true,
-            json: true,
-            maxsize: 5242880, //5MB
-            maxFiles: 5,
-            colorize: false
-        })
-    ],
-    exitOnError: false
-});
 
 // Returns middleware for logging all requests to the site
 module.exports = function requestLogger() {
     logger.debug('Setting up request logging (isDevelopment = %s)', config.isDevelopment);
     
-    // For development, just use morgan with the default dev setup (log to console)
-    if (config.isDevelopment) {
-        return morgan('dev');
-    } 
-    
-    // For production, hook morgan up to winston to log to a file
-    return morgan('combined', {
-        stream: {
-            write: function(message, encoding) {
-                requestFileLogger.info(message);
-            }
-        }
+    // Always log requests to a file
+    var expressFileLogger = expressBunyan({
+        name: 'request-logger',
+        format: ' ',
+        parseUA: false,
+        excludes: [
+            'req', 'res', 'req-headers', 'res-headers', 'body', 'short-body', 'incoming'
+        ],
+        streams: [{
+            type: 'rotating-file',
+            path: path.resolve(__dirname, '../logs/request-logs.log'),
+            period: '1d',
+            count: 7,
+            level: 'info'
+        }]
     });
+    
+    // Log requests to the console also in development environments using morgan dev output
+    if (config.isDevelopment) {
+        var morgan = require('morgan');
+        var expressMorgan = morgan('dev');
+        return [ expressFileLogger, expressMorgan ];
+    } else {
+        return expressFileLogger;
+    }
 };

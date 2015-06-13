@@ -18,7 +18,7 @@ module.exports = function proxy() {
         }
         
         var subdomain = req.subdomains[0];
-        logger.verbose('Looking for proxied subdomain [%s]', subdomain);
+        logger.debug('Looking for proxied subdomain [%s]', subdomain);
         
         // Check with the index to see if its a valid subdomain
         var proxyTo = subdomainsIndex[subdomain];
@@ -27,12 +27,12 @@ module.exports = function proxy() {
             return;
         }
                 
-        logger.verbose('Proxying request from [%s] to [%s]', req.hostname, proxyTo.upstream);
+        logger.debug('Proxying request from [%s] to [%s]', req.hostname, proxyTo.upstream);
         
         // Proxy the request and handle errors
         p.web(req, res, { target: 'http://' + proxyTo.upstream }, function(err) {
             if (!err) return;
-            logger.error('Problem talking to proxied service', err);
+            logger.error(err, 'Problem talking to proxied service');
             next(err);
         });
     };

@@ -61,7 +61,7 @@ app.use(errorHandler());
 var httpServer = http.createServer(app);
 httpServer.listen(config.bindPort, config.bindIp, function(err) {
     if (err) {
-        logger.error("Failed to bind to %s:%d", config.bindIp, config.bindPort);
+        logger.error(err, "Failed to bind to %s:%d", config.bindIp, config.bindPort);
         process.exit(1);
     }
   
