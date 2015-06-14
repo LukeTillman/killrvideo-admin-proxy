@@ -72,7 +72,7 @@ module.exports = function(grunt) {
             
             // Enable live reload on changes to public assets
             livereload: {
-                files: [ 'public/**/*.*' ],
+                files: [ 'public/**/*.*', 'views/**/*.jade' ],
                 options: {
                     livereload: true
                 }
