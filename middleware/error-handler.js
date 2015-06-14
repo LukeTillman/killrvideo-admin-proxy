@@ -1,26 +1,38 @@
 var config = require('../conf');
+var logger = require('../lib/logger');
+
+// Gets a child logger of the main logger with extra context info added to the log record
+function getChildLogger(req, res) {
+    var extraInfo = {
+        req: req,
+        res: res,
+        loggedIn: false,
+        userId: null
+    };
+    
+    // Include auth info if present
+    if (req.session && req.session.auth) {
+        extraInfo.loggedIn = req.session.auth.loggedIn;
+        extraInfo.userId = req.session.auth.userId;
+    }
+    
+    return logger.child(extraInfo);
+};
 
 // Middleware for handling errors
 module.exports = function errorHandler() {
     
-    // Default error handlers
-    if (config.isDevelopment) {
-        // Development error handler, will print stack traces
-        return function errorHandler(err, req, res, next) {
-            res.status(err.status || 500);
-            res.render('error', {
-               message: err.message,
-               error: err
-            });
-        };
-    }
-    
-    // Production error handler, hides stack traces
     return function errorHandler(err, req, res, next) {
         res.status(err.status || 500);
+        
+        // Log error
+        getChildLogger(req, res).error(err);
+        
+        // Show view
         res.render('error', {
             message: err.message,
-            error: {}
+            // Only show stack traces in development
+            error: config.isDevelopment ? err : {}
         });
     };
 };

@@ -32,7 +32,6 @@ module.exports = function proxy() {
         // Proxy the request and handle errors
         p.web(req, res, { target: 'http://' + proxyTo.upstream }, function(err) {
             if (!err) return;
-            logger.error(err, 'Problem talking to proxied service');
             next(err);
         });
     };

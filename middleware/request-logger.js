@@ -10,7 +10,6 @@ module.exports = function requestLogger() {
     // Always log requests to a file
     var expressFileLogger = expressBunyan({
         name: 'request-logger',
-        format: ' ',
         parseUA: false,
         excludes: [
             'res', 'req-headers', 'res-headers', 'body', 'short-body', 'incoming'
