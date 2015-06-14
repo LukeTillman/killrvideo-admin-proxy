@@ -13,8 +13,25 @@ module.exports = function requestLogger() {
         format: ' ',
         parseUA: false,
         excludes: [
-            'req', 'res', 'req-headers', 'res-headers', 'body', 'short-body', 'incoming'
+            'res', 'req-headers', 'res-headers', 'body', 'short-body', 'incoming'
         ],
+        serializers: {
+            // Customize request serialization so we only include auth information if present
+            req: function serializeRequest(req) {
+                if (!req.session || !req.session.auth) {
+                    return {
+                        hostname: req.hostname,
+                        loggedIn: false,
+                        userId: null
+                    };
+                }
+                return {
+                    hostname: req.hostname,
+                    loggedIn: req.session.auth.loggedIn,
+                    userId: req.session.auth.userId
+                };
+            }
+        },
         streams: [{
             type: 'rotating-file',
             path: path.resolve(__dirname, '../logs/request-logs.log'),

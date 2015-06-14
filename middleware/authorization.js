@@ -2,7 +2,7 @@ var _ = require('lodash');
 
 function isAuthorized(req) {
     // Users who aren't logged in aren't authorized
-    if (req.loggedIn !== true || !req.session.auth) {
+    if (!req.session.auth) {
         return false;
     } 
     
