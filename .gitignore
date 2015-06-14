@@ -33,3 +33,10 @@ node_modules
 /conf.js
 /conf.*.js
 !/conf.template.js
+
+# Bower components
+bower_components
+
+# Build output
+.build
+public/**/bower.*
