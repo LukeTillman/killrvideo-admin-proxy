@@ -18,18 +18,17 @@ module.exports = function requestLogger() {
         serializers: {
             // Customize request serialization so we only include auth information if present
             req: function serializeRequest(req) {
-                if (!req.session || !req.session.auth) {
-                    return {
-                        hostname: req.hostname,
-                        loggedIn: false,
-                        userId: null
-                    };
-                }
-                return {
+                var reqInfo = {
                     hostname: req.hostname,
-                    loggedIn: req.session.auth.loggedIn,
-                    userId: req.session.auth.userId
+                    subdomains: req.subdomains,
+                    loggedIn: false,
+                    userId: null
                 };
+                if (req.session && req.session.auth) {
+                    reqInfo.loggedIn = req.session.auth.loggedIn;
+                    reqInfo.userId = req.session.auth.userId;
+                }
+                return reqInfo;
             }
         },
         streams: [{

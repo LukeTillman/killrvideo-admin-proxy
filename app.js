@@ -21,6 +21,10 @@ var app = express();
 // Save the main domain for use in templates
 app.locals.domain = config.domain;
 
+// Figure out the subdomain offset by parsing the main domain name
+var domainParts = config.domain.split('.');
+app.set('subdomain offset', domainParts.length);
+
 // Setup the view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
