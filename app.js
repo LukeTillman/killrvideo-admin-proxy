@@ -2,6 +2,7 @@
 var http = require('http');
 var express = require('express');
 var path = require('path');
+var favicon = require('serve-favicon');
 
 var config = require('./conf');
 var logger = require('./lib/logger');
@@ -29,13 +30,16 @@ app.set('subdomain offset', domainParts.length);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-// Setup request logging
-app.use(requestLogger());
-
 // Route subdomain requests to proxy app
 app.use(subdomainProxy());
 
 // All other requests handled by the main app below here
+
+// Serve favicon requests
+app.use(favicon(__dirname + '/public/favicon.ico'));
+
+// Log requests
+app.use(requestLogger());
 
 // Static content
 app.use(express.static(path.join(__dirname, 'public')));

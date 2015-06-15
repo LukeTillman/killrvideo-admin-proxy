@@ -17,27 +17,46 @@ module.exports = function(grunt) {
             }
         },
         
+        // Custom task for specifying configuration
+        build: {
+            dev: {
+                configFile: 'conf.local.js'
+            },
+            release: {
+                configFile: 'conf.cloud.js'
+            }
+        },
+        
         // Copy files to the correct locations
         copy: {
-            dev: {
-                files: [
-                    { src: 'conf.local.js', dest: 'conf.js' }
-                ]
+            config: {
+                src: '<%= build.current.configFile %>',
+                dest: 'conf.js'
             },
             
-            release: {
+            assets: {
                 files: [
-                    // TODO: Rest of build output to ./build directory
-                    { src: 'conf.cloud.js', dest: 'conf.js' }
+                    { expand: true, cwd: 'bower_components/font-awesome/fonts/', src: '*', dest: 'public/fonts/' }
                 ]
             }
+            // TODO: Copy build output for packaging?
         },
         
         // Concatenate bower dependencies
         bower_concat: {
             all: {
                 dest: __dirname + '/public/js/bower.js',
-                cssDest: __dirname + '/public/css/bower.css'
+                cssDest: __dirname + '/public/css/bower.css',
+                mainFiles: {
+                    bootstrap: [ 
+                        // 'dist/css/bootstrap.css', 
+                        // 'dist/css/bootstrap-theme.css', 
+                        'dist/js/bootstrap.js' 
+                    ],
+                    bootswatch: [
+                        'cosmo/bootstrap.css'
+                    ]
+                }
             }
         },
         
@@ -57,7 +76,7 @@ module.exports = function(grunt) {
         watch: {
             // Watch for changes to the server code and reload express
             express: {
-                files: [ '**/*.js', '!public/js/*.js' ],
+                files: [ '**/*.js', '!public/js/*.js', '!Gruntfile.js' ],
                 tasks: [ 'express:dev' ],
                 options: {
                     spawn: false
@@ -91,8 +110,14 @@ module.exports = function(grunt) {
     grunt.registerTask('init', 'Prepare the project for development', 
         [ 'shell:bower', 'default' ]);
     
-    grunt.registerTask('default', 'Build assets for development', 
-        [ 'bower_concat:all', 'copy:dev' ]);
+    grunt.registerMultiTask('build', 'Builds assets for development or release', function() {
+        grunt.config.set('build.current', this.data);
+        
+        // Build is just an alias for other tasks once configuration has been set
+        grunt.task.run([ 'bower_concat:all', 'copy:config', 'copy:assets' ]);
+    });
+    
+    grunt.registerTask('default', 'Build assets for development', [ 'build:dev' ]);
     
     grunt.registerTask('dev', 'Dev mode: watches files and restarts server on changes', 
         [ 'default', 'express:dev', 'watch' ]);

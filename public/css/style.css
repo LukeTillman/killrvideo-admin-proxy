@@ -1,8 +1,15 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+.navbar-default .navbar-brand {
+    font-weight: 300;
+    font-size: 21px;
 }
 
-a {
-  color: #00B7FF;
+.navbar-brand > img {
+    display: inline-block;
+    margin-top: -4px;
+    padding-right: 4px;
+}
+
+.profile-image {
+    height: 25px;
+    padding-right: 4px;
 }

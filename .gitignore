@@ -40,3 +40,4 @@ bower_components
 # Build output
 .build
 public/**/bower.*
+public/fonts

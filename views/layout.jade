@@ -1,10 +1,46 @@
 doctype html
 html
-  head
-    title= title
-    link(rel='stylesheet', href='//' + domain + '/css/bower.css')
-    link(rel='stylesheet', href='//' + domain + '/css/style.css')
-    
-    script(type='text/javascript', src='//' + domain + '/js/bower.js')
-  body
-    block content
+    //- Allow child templates to set variables (like title)
+    block vars
+    head
+        title #{title} - KillrVideo Admin Proxy
+        link(rel='stylesheet', href='//' + domain + '/css/bower.css')
+        link(rel='stylesheet', href='//' + domain + '/css/style.css')
+        link(rel='icon', type='image/png', href='//' + domain + '/images/killrvideo-icon-bw.png')
+        
+        script(type='text/javascript', src='//' + domain + '/js/bower.js')
+    body
+        nav.navbar.navbar-default
+            .container-fluid
+                // Header and toggle for navbar collapse
+                .navbar-header
+                    // Collapse toggle when authenticated
+                    if everyauth && everyauth.loggedIn === true
+                        button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#main-nav-collapse')
+                            span.sr-only Toggle Navigation
+                            span.icon-bar
+                            span.icon-bar
+                            span.icon-bar
+                    // Brand link
+                    a.navbar-brand(href='//' + domain + '/')
+                        img(alt='KillrVideo Logo', src='//' + domain + '/images/killrvideo-bw.png')
+                        | Admin Proxy
+                // Collapsible elements for logging out when user is authenticated
+                if everyauth && everyauth.loggedIn === true
+                    #main-nav-collapse.collapse.navbar-collapse
+                        ul.nav.navbar-nav.navbar-right
+                            li.dropdown
+                                a.dropdown-toggle(href='#', data-toggle='dropdown', role='button')
+                                    if everyauth.google
+                                        img.img-circle.profile-image(src=everyauth.google.user.picture)
+                                        | #{everyauth.google.user.name} 
+                                    else if everyauth.github
+                                        img.img-circle.profile-image(src=everyauth.github.user.avatar_url)
+                                        | #{everyauth.github.user.name} 
+                                    else
+                                        | #{everyauth.userId} 
+                                    span.caret
+                                ul.dropdown-menu(role='menu')
+                                    li: a(href='//' + domain + '/logout') Sign Out
+        .container
+            block content

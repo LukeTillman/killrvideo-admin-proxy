@@ -4,6 +4,7 @@ var vhost = require('vhost');
 
 var config = require('../conf');
 
+var requestLogger = require('./request-logger');
 var cookies = require('./cookies');
 var session = require('./session');
 var authentication = require('./authentication');
@@ -26,6 +27,9 @@ module.exports = function subdomainProxy() {
     // Setup the view engine so the subdomain can show error handler views
     app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'jade');
+    
+    // Log requests
+    app.use(requestLogger());
     
     // Allow cookies
     app.use(cookies());
