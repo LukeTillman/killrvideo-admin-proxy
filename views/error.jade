@@ -1,6 +1,9 @@
 extends layout
 
+block vars
+    - var title = 'Error';
+    
 block content
-  h1.text-danger #{message}
-  if error.stack
-    pre #{error.stack}
+    h1.text-danger #{message}
+    if error.stack
+        pre #{error.stack}

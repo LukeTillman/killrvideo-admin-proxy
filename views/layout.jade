@@ -1,17 +1,20 @@
 doctype html
 html
+    //- Include helper functions
+    include ./helpers.jade
+       
     //- Allow child templates to set variables (like title)
     block vars
     head
         title #{title} - KillrVideo Admin Proxy
-        link(rel='stylesheet', href='//' + domain + '/css/bower.css')
-        link(rel='stylesheet', href='//' + domain + '/css/style.css')
-        link(rel='icon', type='image/png', href='//' + domain + '/images/killrvideo-icon-bw.png')
+        link(rel='stylesheet', href=domainUrl('/css/bower.css'))
+        link(rel='stylesheet', href=domainUrl('/css/style.css'))
+        link(rel='icon', type='image/png', href=domainUrl('/images/killrvideo-icon-bw.png'))
         
-        script(type='text/javascript', src='//' + domain + '/js/bower.js')
+        script(type='text/javascript', src=domainUrl('/js/bower.js'))
     body
         nav.navbar.navbar-default
-            .container-fluid
+            .container
                 // Header and toggle for navbar collapse
                 .navbar-header
                     // Collapse toggle when authenticated
@@ -22,8 +25,8 @@ html
                             span.icon-bar
                             span.icon-bar
                     // Brand link
-                    a.navbar-brand(href='//' + domain + '/')
-                        img(alt='KillrVideo Logo', src='//' + domain + '/images/killrvideo-bw.png')
+                    a.navbar-brand(href=domainUrl('/'))
+                        img(alt='KillrVideo Logo', src=domainUrl('/images/killrvideo-bw.png'))
                         | Admin Proxy
                 // Collapsible elements for logging out when user is authenticated
                 if everyauth && everyauth.loggedIn === true
@@ -41,6 +44,6 @@ html
                                         | #{everyauth.userId} 
                                     span.caret
                                 ul.dropdown-menu(role='menu')
-                                    li: a(href='//' + domain + '/logout') Sign Out
+                                    li: a(href=domainUrl('/logout')) Sign Out
         .container
             block content
