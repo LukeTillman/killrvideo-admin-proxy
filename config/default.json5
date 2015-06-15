@@ -17,6 +17,7 @@
     subdomains: {
         solr: {
             subdomain: 'solr',
+            redirectOnRoot: '/solr/',
             upstream: 'localhost:18983',
             name: 'Solr Admin Panel',
             description: 'The Solr Admin panel for managing KillrVideo\'s DataStax Enterprise Solr integration.',
@@ -24,6 +25,7 @@
         },
         opscenter: {
             subdomain: 'opscenter',
+            redirectOnRoot: '/opscenter/index.html',
             upstream: 'localhost:8888',
             name: 'OpsCenter',
             description: 'The OpsCenter control panel for managing KillrVideo\'s DataStax Enterprise Cassandra cluster.',

@@ -26,7 +26,13 @@ module.exports = function proxy() {
             res.status(404).send('Invalid domain.');
             return;
         }
-                
+        
+        // If the request is for the root, make sure we shouldn't redirect
+        if (req.path === '/' && proxyTo.redirectOnRoot) {
+            res.redirect(proxyTo.redirectOnRoot);
+            return;
+        }
+        
         logger.debug('Proxying request from [%s] to [%s]', req.hostname, proxyTo.upstream);
         
         // Proxy the request and handle errors
