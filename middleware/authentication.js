@@ -1,7 +1,7 @@
 var everyauth = require('everyauth');
 var express = require('express');
 var logger = require('../lib/logger');
-var config = require('../conf');
+var config = require('config');
 var _ = require('lodash');
 
 // Create a "user" object used by everyauth and logs the successful login
@@ -27,12 +27,12 @@ module.exports = function authentication(setupRoutes) {
     var postLoginPath = '/auth/postLogin';
     
     // Otherwise, we need to do some configuration and setup the routes
-    var authConfig = config.authentication;
+    
     
     // Setup Google OAuth 2 authentication
     everyauth.google
-        .appId(authConfig.google.appId)
-        .appSecret(authConfig.google.appSecret)
+        .appId(config.get('authentication.google.appId'))
+        .appSecret(config.get('authentication.google.appSecret'))
         .scope('email')
         .findOrCreateUser(function(session, accessToken, accessTokenExtra, googleUserMetadata) {
             return createUserAndLog('google', googleUserMetadata.email, googleUserMetadata);
@@ -41,8 +41,8 @@ module.exports = function authentication(setupRoutes) {
             
     // Setup GitHub OAuth authentication
     everyauth.github
-        .appId(authConfig.github.appId)
-        .appSecret(authConfig.github.appSecret)
+        .appId(config.get('authentication.github.appId'))
+        .appSecret(config.get('authentication.github.appSecret'))
         .scope('user:email,read:org')
         .findOrCreateUser(function(session, accessToken, accessTokenExtra, githubUserMetadata) {
             // Create the user from the data that comes back in the initial metadata
@@ -73,7 +73,7 @@ module.exports = function authentication(setupRoutes) {
     var router = express.Router();
     
     // Page for user to select how to login
-    router.get(authConfig.loginPath, function(req, res, next) {
+    router.get(config.get('authentication.loginPath'), function(req, res, next) {
         // If there is a parameter specifying where to go after login, save it in a cookie
         var redirectAfterLogin = req.query.redirectAfterLogin;
         if (redirectAfterLogin) {

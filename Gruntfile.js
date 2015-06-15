@@ -20,18 +20,19 @@ module.exports = function(grunt) {
         // Custom task for specifying configuration
         build: {
             dev: {
-                configFile: 'conf.local.js'
+                configFile: 'config/dev.json5'
             },
             release: {
-                configFile: 'conf.cloud.js'
+                configFile: 'config/cloud.json5'
             }
         },
         
         // Copy files to the correct locations
         copy: {
             config: {
+                nonull: true,
                 src: '<%= build.current.configFile %>',
-                dest: 'conf.js'
+                dest: 'config/local.json5'
             },
             
             assets: {
@@ -48,7 +49,8 @@ module.exports = function(grunt) {
                 dest: __dirname + '/public/js/bower.js',
                 cssDest: __dirname + '/public/css/bower.css',
                 mainFiles: {
-                    bootstrap: [ 
+                    bootstrap: [
+                        // Can go back to default theme by removing bootswatch and bringing these back
                         // 'dist/css/bootstrap.css', 
                         // 'dist/css/bootstrap-theme.css', 
                         'dist/js/bootstrap.js' 
@@ -82,13 +84,7 @@ module.exports = function(grunt) {
                     spawn: false
                 }
             },
-            
-            // Concat files if bower dependencies change
-            bower_concat: {
-                files: [ 'bower.json' ],
-                tasks: [ 'bower_concat:all' ]
-            },
-            
+                        
             // Enable live reload on changes to public assets
             livereload: {
                 files: [ 'public/**/*.*', 'views/**/*.jade' ],

@@ -1,7 +1,7 @@
 var cookieParser = require('cookie-parser');
-var config = require('../conf');
+var config = require('config');
 
 // Returns middleware that enables parsing cookies
 module.exports = function cookies() {
-    return cookieParser(config.cookieSecret);
+    return cookieParser(config.get('cookieSecret'));
 };

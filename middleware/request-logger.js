@@ -2,7 +2,7 @@ var path = require('path');
 var bunyan = require('bunyan');
 var expressBunyan = require('express-bunyan-logger');
 var logger = require('../lib/logger');
-var config = require('../conf');
+var config = require('config');
 
 // Just create one logger instance and reuse it if middleware is created multiple times
 var fileLogger = bunyan.createLogger({
@@ -46,7 +46,7 @@ module.exports = function requestLogger() {
     });
     
     // Log requests to the console also in development environments using morgan dev output
-    if (config.isDevelopment) {
+    if (config.get('isDevelopment')) {
         var morgan = require('morgan');
         var expressMorgan = morgan('dev');
         return [ expressFileLogger, expressMorgan ];

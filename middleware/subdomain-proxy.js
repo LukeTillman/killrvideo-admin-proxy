@@ -2,7 +2,7 @@ var path = require('path');
 var express = require('express');
 var vhost = require('vhost');
 
-var config = require('../conf');
+var config = require('config');
 
 var requestLogger = require('./request-logger');
 var cookies = require('./cookies');
@@ -18,10 +18,11 @@ module.exports = function subdomainProxy() {
     var app = express();
     
     // Save the main domain for use in templates
-    app.locals.domain = config.domain;
+    var domain = config.get('domain');
+    app.locals.domain = domain;
     
     // Figure out the subdomain offset by parsing the main domain name
-    var domainParts = config.domain.split('.');
+    var domainParts = domain.split('.');
     app.set('subdomain offset', domainParts.length);
     
     // Setup the view engine so the subdomain can show error handler views
@@ -51,5 +52,5 @@ module.exports = function subdomainProxy() {
     app.use(errorHandler());
     
     // Pass any requests to subdomains to our new express app
-    return vhost('*.' + config.domain, app);
+    return vhost('*.' + domain, app);
 };

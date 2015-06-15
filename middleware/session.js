@@ -1,6 +1,6 @@
 var expressSession = require('express-session');
 var LruCacheStore = require('../lib/lru-cache-store')(expressSession);
-var config = require('../conf');
+var config = require('config');
 
 // Use shared storage across all instances of session middleware (max of 50 sessions stored)
 var sharedStore = new LruCacheStore(50);
@@ -12,9 +12,9 @@ module.exports = function session() {
         store: sharedStore,
         name: '__killrvideoproxy',
         // Cookies should use the root domain so subdomains can share sessions
-        cookie: { domain: '.' + config.domain },
+        cookie: { domain: '.' + config.get('domain') },
         resave: false,
         saveUninitialized: false,
-        secret: config.cookieSecret
+        secret: config.get('cookieSecret')
     });
 };

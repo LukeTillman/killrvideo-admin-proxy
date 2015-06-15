@@ -3,8 +3,9 @@ var http = require('http');
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
+var _ = require('lodash');
 
-var config = require('./conf');
+var config = require('config');
 var logger = require('./lib/logger');
 
 var requestLogger = require('./middleware/request-logger');
@@ -20,10 +21,11 @@ var errorHandler = require('./middleware/error-handler');
 var app = express();
 
 // Save the main domain for use in templates
-app.locals.domain = config.domain;
+var domain = config.get('domain');
+app.locals.domain = domain;
 
 // Figure out the subdomain offset by parsing the main domain name
-var domainParts = config.domain.split('.');
+var domainParts = domain.split('.');
 app.set('subdomain offset', domainParts.length);
 
 // Setup the view engine
@@ -58,7 +60,18 @@ app.use(authorization());
 
 // Main view for selecting where to go once authorized
 app.get('/', function(req, res, next) {
-    res.render('index');
+    var resources = _.map(config.get('subdomains'), function(val) {
+        return {
+            subdomain: val.subdomain,
+            name: val.name,
+            description: val.description,
+            image: val.image
+        };
+    });
+    
+    res.render('index', {
+        resources: resources
+    });
 });
 
 // Error Handlers
@@ -67,11 +80,13 @@ app.use(errorHandler());
 
 // Start the Web Server
 var httpServer = http.createServer(app);
-httpServer.listen(config.bindPort, config.bindIp, function(err) {
+var bindIp = config.get('bindIp');
+var bindPort = config.get('bindPort');
+httpServer.listen(bindPort, bindIp, function(err) {
     if (err) {
-        logger.error(err, "Failed to bind to %s:%d", config.bindIp, config.bindPort);
+        logger.error(err, "Failed to bind to %s:%d", bindIp, bindPort);
         process.exit(1);
     }
   
-    logger.info("Listening on %s:%d", config.bindIp, config.bindPort);
+    logger.info("Listening on %s:%d", bindIp, bindPort);
 });

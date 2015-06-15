@@ -1,11 +1,11 @@
 var httpProxy = require('http-proxy');
 var _ = require('lodash');
 var logger = require('../lib/logger');
-var config = require('../conf');
+var config = require('config');
 
 // Returns middleware that proxies requests to backend services
 module.exports = function proxy() {
-    var subdomainsIndex = _.indexBy(config.subdomains, 'subdomain');
+    var subdomainsIndex = _.indexBy(config.get('subdomains'), 'subdomain');
     
     // Create a proxy server to service requests
     var p = httpProxy.createProxyServer({xfwd: true});

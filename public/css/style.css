@@ -13,3 +13,15 @@
     height: 25px;
     padding-right: 4px;
 }
+
+a.admin-resource:hover, a.admin-resource:focus {
+    text-decoration: none;
+}
+
+.admin-resource-image {
+    height: 200px;
+    width: auto;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}

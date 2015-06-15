@@ -1,9 +1,11 @@
 var qs = require('querystring');
 var authorization = require('./authorization');
-var config = require('../conf');
+var config = require('config');
 
 // Returns middleware for handling a not authorized error
 module.exports = function notAuthorized() {
+    var loginUrl = '//' + config.get('domain') + config.get('authentication.loginPath');
+    
     return function notAuthorized(err, req, res, next) {
         // If not a "Not Authorized" error, just move to the next handler
         if (err !== authorization.notAuthorizedToken) {
@@ -20,7 +22,7 @@ module.exports = function notAuthorized() {
         // If they aren't logged in, remember where they were trying to go and redirect them to the login page
         if (req.loggedIn !== true) {
             var redirectQs = qs.stringify({ redirectAfterLogin: req.protocol + '://' + req.get('host') + req.originalUrl });
-            res.redirect('//' + config.domain + config.authentication.loginPath + '?' + redirectQs);
+            res.redirect(loginUrl + '?' + redirectQs);
             return;
         }
         

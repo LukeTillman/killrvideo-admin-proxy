@@ -30,9 +30,8 @@ node_modules
 .settings
 
 # Configuration files that might have sensitive stuff in them
-/conf.js
-/conf.*.js
-!/conf.template.js
+config/*.json5
+!config/default.json5
 
 # Bower components
 bower_components

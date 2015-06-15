@@ -1,4 +1,4 @@
-var config = require('../conf');
+var config = require('config');
 var logger = require('../lib/logger');
 
 // Gets a child logger of the main logger with extra context info added to the log record
@@ -21,6 +21,7 @@ function getChildLogger(req, res) {
 
 // Middleware for handling errors
 module.exports = function errorHandler() {
+    var isDevelopment = config.get('isDevelopment');
     
     return function errorHandler(err, req, res, next) {
         res.status(err.status || 500);
@@ -32,7 +33,7 @@ module.exports = function errorHandler() {
         res.render('error', {
             message: err.message,
             // Only show stack traces in development
-            error: config.isDevelopment ? err : {}
+            error: isDevelopment ? err : {}
         });
     };
 };

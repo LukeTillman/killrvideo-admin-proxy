@@ -1,0 +1,50 @@
+// Default configuration template (some values need to be overridden)
+{
+    // Whether or not we're in a development environment
+    isDevelopment: true,
+    
+    // Where to bind the server
+    bindPort: 80,
+    bindIp: '127.0.0.1',
+    
+    // The main domain
+    domain: 'killrvideo-cassandra1.localhost.net',
+    
+    // Secret used to sign cookies
+    cookieSecret: 'Some secret',
+    
+    // Subdomains being proxied
+    subdomains: {
+        solr: {
+            subdomain: 'solr',
+            upstream: 'localhost:18983',
+            name: 'Solr Admin Panel',
+            description: 'The Solr Admin panel for managing KillrVideo\'s DataStax Enterprise Solr integration.',
+            image: 'Solr_logo_on_white.png'
+        },
+        opscenter: {
+            subdomain: 'opscenter',
+            upstream: 'localhost:8888',
+            name: 'OpsCenter',
+            description: 'The OpsCenter control panel for managing KillrVideo\'s DataStax Enterprise Cassandra cluster.',
+            image: 'opscenter-thumb.png'
+        }
+    },
+    
+    // How to authenticate users
+    authentication: {
+        // The path to the login page
+        loginPath: '/auth/login',
+        
+        // Authentication method configuration
+        google: {
+            appId: 'APP_ID_HERE',
+            appSecret: 'APP_SECRET_HERE'
+        },
+        
+        github: {
+            appId: 'APP_ID_HERE',
+            appSecret: 'APP_SECRET_HERE'
+        }
+    }
+}

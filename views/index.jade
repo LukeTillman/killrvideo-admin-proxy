@@ -1,5 +1,17 @@
 extends layout
 
+block vars
+    - var title = 'Home';
+
 block content
-  h1= title
-  p Welcome to #{title}
+    h1 KillrVideo Admin Resources
+    p Below is a list of all admin resources currently available for KillrVideo. Click on one to open it in a new window.
+    br
+    .row
+        each resource in resources
+            col-sm-6.col-md-4.col-lg-3
+                a.thumbnail.admin-resource(href='//' + resource.subdomain + '.' + domain, target='_blank')
+                    .admin-resource-image(style='background-image: url(\'' + domainUrl('/images/' + resource.image) + '\')')
+                    .caption
+                        h3 #{resource.name}
+                        p #{resource.description}
