@@ -34,8 +34,6 @@ var fileLogger = bunyan.createLogger({
 
 // Returns middleware for logging all requests to the site
 module.exports = function requestLogger() {
-    logger.debug('Setting up request logging (isDevelopment = %s)', config.isDevelopment);
-    
     // Always log requests to a file
     var expressFileLogger = expressBunyan({
         logger: fileLogger,
