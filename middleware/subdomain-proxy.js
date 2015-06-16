@@ -12,8 +12,19 @@ module.exports = function subdomainProxy() {
             return;
         }
         
-        // Proxy the request and handle errors
-        proxy.web(req, res, { target: 'http://' + req.proxyTo.upstream }, function(err) {
+        var target = 'http://' + req.proxyTo.upstream;
+        
+        // If web socket information is present, proxy the socket
+        if (req.webSocket) {
+            proxy.ws(req, req.webSocket.socket, req.webSocket.head, { target: target }, function(err) {
+                if (!err) return;
+                next(err);
+            });
+            return;
+        }
+        
+        // Otherwise proxy the request and handle errors
+        proxy.web(req, res, { target: target }, function(err) {
             if (!err) return;
             next(err);
         });

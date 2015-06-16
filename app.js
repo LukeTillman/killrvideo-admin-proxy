@@ -7,6 +7,7 @@ var config = require('config');
 var logger = require('./lib/logger');
 var rootApp = require('./core/root-app');
 var subdomainApp = require('./core/subdomain-app');
+var subdomainSocketApp = require('./core/subdomain-socket-app');
 
 // Create the main express app
 var app = express();
@@ -17,11 +18,14 @@ app.use(vhost('*.' + config.get('domain'), subdomainApp()));
 // All other requests go to the root app
 app.use(rootApp());
 
+// Create the server and setup handler for web socket upgrade requests
+var server = http.createServer(app);
+server.on('upgrade', subdomainSocketApp());
+
 // Start the Web Server
-var httpServer = http.createServer(app);
 var bindIp = config.get('bindIp');
 var bindPort = config.get('bindPort');
-httpServer.listen(bindPort, bindIp, function(err) {
+server.listen(bindPort, bindIp, function(err) {
     if (err) {
         logger.error(err, "Failed to bind to %s:%d", bindIp, bindPort);
         process.exit(1);

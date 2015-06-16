@@ -12,6 +12,7 @@ var session = require('../middleware/session');
 var authentication = require('../middleware/authentication');
 var authorization = require('../middleware/authorization');
 var notAuthorized = require('../middleware/not-authorized');
+var errorLogger = require('../middleware/error-logger');
 var errorHandler = require('../middleware/error-handler');
 
 // Function that returns an express app for handling requests on the root of
@@ -71,6 +72,7 @@ module.exports = function rootApp() {
     
     // Error Handlers
     app.use(notAuthorized());
+    app.use(errorLogger());
     app.use(errorHandler());
     
     // Return the app

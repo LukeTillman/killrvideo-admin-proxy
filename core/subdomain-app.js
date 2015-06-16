@@ -12,6 +12,7 @@ var subdomainVerify = require('../middleware/subdomain-verify')
 var subdomainRedirectRoot = require('../middleware/subdomain-redirect-root');
 var subdomainProxy = require('../middleware/subdomain-proxy');
 var notAuthorized = require('../middleware/not-authorized');
+var errorLogger = require('../middleware/error-logger');
 var errorHandler = require('../middleware/error-handler');
 
 // Function for creating the app that serves regular requests to subdomains
@@ -57,6 +58,7 @@ module.exports = function subdomainApp() {
 
     // Error Handlers
     app.use(notAuthorized());
+    app.use(errorLogger());
     app.use(errorHandler());
     
     // Return the configured app
