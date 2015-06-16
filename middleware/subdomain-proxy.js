@@ -1,56 +1,21 @@
-var path = require('path');
-var express = require('express');
-var vhost = require('vhost');
+var httpProxy = require('http-proxy');
 
-var config = require('config');
-
-var requestLogger = require('./request-logger');
-var cookies = require('./cookies');
-var session = require('./session');
-var authentication = require('./authentication');
-var authorization = require('./authorization');
-var proxy = require('./proxy');
-var notAuthorized = require('./not-authorized');
-var errorHandler = require('./error-handler');
-
-// Returns middleware for proxying subdomain requests
+// Returns middleware that proxies requests to backend services
 module.exports = function subdomainProxy() {
-    var app = express();
+    // Create a proxy server to service requests
+    var proxy = httpProxy.createProxyServer({xfwd: true});
     
-    // Save the main domain for use in templates
-    var domain = config.get('domain');
-    app.locals.domain = domain;
-    
-    // Figure out the subdomain offset by parsing the main domain name
-    var domainParts = domain.split('.');
-    app.set('subdomain offset', domainParts.length);
-    
-    // Setup the view engine so the subdomain can show error handler views
-    app.set('views', path.join(__dirname, '../views'));
-    app.set('view engine', 'jade');
-    
-    // Log requests
-    app.use(requestLogger());
-    
-    // Allow cookies
-    app.use(cookies());
-    
-    // Enable sessions
-    app.use(session());
-
-    // Populate any authentication information but don't actually host routes for auth here
-    app.use(authentication(false));
-
-    // Must be authorized to access handlers below
-    app.use(authorization());
-
-    // Proxy requests to backend services
-    app.use(proxy());
-
-    // Error Handlers
-    app.use(notAuthorized());
-    app.use(errorHandler());
-    
-    // Pass any requests to subdomains to our new express app
-    return vhost('*.' + domain, app);
+    return function subdomainProxy(req, res, next) {
+        // Make sure we have proxy information
+        if (!req.proxyTo) {
+            next(new Error('No proxy information found on the request'));
+            return;
+        }
+        
+        // Proxy the request and handle errors
+        proxy.web(req, res, { target: 'http://' + req.proxyTo.upstream }, function(err) {
+            if (!err) return;
+            next(err);
+        });
+    };
 };
