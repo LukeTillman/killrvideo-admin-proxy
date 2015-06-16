@@ -28,6 +28,7 @@ node_modules
 
 # VS Code settings
 .settings
+typings
 
 # Configuration files that might have sensitive stuff in them
 config/*.json5
