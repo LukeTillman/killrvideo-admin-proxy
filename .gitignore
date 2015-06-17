@@ -41,3 +41,7 @@ bower_components
 .build
 public/**/bower.*
 public/fonts
+
+# Certificates for SSL
+certs/*
+!certs/dev*

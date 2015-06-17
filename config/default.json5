@@ -7,7 +7,7 @@
     logPath: './logs',
     
     // Where to bind the server
-    bindPort: 80,
+    bindPort: 443,
     bindIp: '127.0.0.1',
     
     // The main domain

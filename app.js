@@ -1,5 +1,7 @@
 /// <reference path="typings/node/node.d.ts"/>
 var http = require('http');
+var https = require('https');
+var fs = require('fs');
 var express = require('express');
 var vhost = require('vhost');
 var config = require('config');
@@ -19,7 +21,10 @@ app.use(vhost('*.' + config.get('domain'), subdomainApp()));
 app.use(rootApp());
 
 // Create the server and setup handler for web socket upgrade requests
-var server = http.createServer(app);
+var server = https.createServer({
+    key: fs.readFileSync(__dirname + '/certs/key.pem'),
+    cert: fs.readFileSync(__dirname + '/certs/cert.pem')
+}, app);
 server.on('upgrade', subdomainSocketApp());
 
 // Start the Web Server

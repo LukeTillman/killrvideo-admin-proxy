@@ -20,10 +20,10 @@ module.exports = function(grunt) {
         // Custom task for specifying configuration
         build: {
             dev: {
-                configFile: 'config/dev.json5'
+                environmentName: 'dev'
             },
             release: {
-                configFile: 'config/cloud.json5'
+                environmentName: 'cloud'
             }
         },
         
@@ -31,8 +31,16 @@ module.exports = function(grunt) {
         copy: {
             config: {
                 nonull: true,
-                src: '<%= build.current.configFile %>',
+                src: 'config/<%= build.current.environmentName %>.json5',
                 dest: 'config/local.json5'
+            },
+            
+            certs: {
+                nonull: true,
+                files: [
+                    { src: 'certs/<%= build.current.environmentName %>.key.pem', dest: 'certs/key.pem' },
+                    { src: 'certs/<%= build.current.environmentName %>.cert.pem', dest: 'certs/cert.pem' }
+                ]
             },
             
             assets: {
@@ -110,7 +118,7 @@ module.exports = function(grunt) {
         grunt.config.set('build.current', this.data);
         
         // Build is just an alias for other tasks once configuration has been set
-        grunt.task.run([ 'bower_concat:all', 'copy:config', 'copy:assets' ]);
+        grunt.task.run([ 'bower_concat:all', 'copy:config', 'copy:assets', 'copy:certs' ]);
     });
     
     grunt.registerTask('default', 'Build assets for development', [ 'build:dev' ]);
