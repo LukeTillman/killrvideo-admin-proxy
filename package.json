@@ -19,7 +19,8 @@
     "express-bunyan-logger": "^1.1.1",
     "serve-favicon": "^2.3.0",
     "config": "^1.14.0",
-    "json5": "^0.4.0"
+    "json5": "^0.4.0",
+    "mkdirp": "^0.5.1"
   },
   "devDependencies": {
     "bunyan-format": "^0.2.1",

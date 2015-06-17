@@ -3,6 +3,11 @@ var bunyan = require('bunyan');
 var expressBunyan = require('express-bunyan-logger');
 var logger = require('../lib/logger');
 var config = require('config');
+var mkdirp = require('mkdirp');
+
+// Log path, resolved from the app.js root
+var logPath = path.resolve(__dirname, '../', config.get('logPath'));
+mkdirp.sync(logPath);
 
 // Just create one logger instance and reuse it if middleware is created multiple times
 var fileLogger = bunyan.createLogger({
@@ -25,7 +30,7 @@ var fileLogger = bunyan.createLogger({
     },
     streams: [{
         type: 'rotating-file',
-        path: path.resolve(__dirname, '../logs/request-logs.log'),
+        path: path.resolve(logPath, './request-logs.log'),
         period: '1d',
         count: 7,
         level: 'info'

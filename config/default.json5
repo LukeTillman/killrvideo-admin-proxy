@@ -3,6 +3,9 @@
     // Whether or not we're in a development environment
     isDevelopment: true,
     
+    // The default location for logs (relative to app.js)
+    logPath: './logs',
+    
     // Where to bind the server
     bindPort: 80,
     bindIp: '127.0.0.1',
