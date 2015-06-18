@@ -1,79 +1,95 @@
-var everyauth = require('everyauth');
 var express = require('express');
-var logger = require('../lib/logger');
 var config = require('config');
+var passport = require('passport');
+var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+var GitHubStrategy = require('../lib/passport-github').Strategy;
+var logger = require('../lib/logger');
 var _ = require('lodash');
 
-// Create a "user" object used by everyauth and logs the successful login
-function createUserAndLog(accessMethod, emailAddress, additionalData) {
-    var authInfo = {
-        loginMethod: accessMethod,
-        emailAddress: emailAddress,
-        metadata: additionalData
+// Creates and logs a user from the profile
+function createUser(provider, email, name, picture, groups, metadata) {
+    var user = {
+        provider: provider,
+        email: email,
+        name: name,
+        picture: picture,
+        groups: groups
     };
-    logger.info({ authInfo: authInfo }, 'Successful authentication');
-    return { id: emailAddress };
+    logger.info({ authUser: user, authMetadata: metadata }, 'Successful authentication');
+    return user;
 }
 
-// Middleware that authenticates a user or handles authentication-related tasks
+// Middleware function to add the req.user property to the res.locals so it's available in views
+function addUserToResponseLocals(req, res, next) {
+    res.locals.user = req.user;
+    next();
+}
+
+// Do passport configuration
+var domain = config.get('domain');
+
+// Serialize the entire user object to/from session (since we don't have a DB to lookup users in)
+passport.serializeUser(function(user, done) {
+    done(null, user);
+});
+passport.deserializeUser(function(obj, done) {
+    done(null, obj);
+});
+
+// Configure Google Auth
+var google = new GoogleStrategy({
+    clientID: config.get('authentication.google.appId'),
+    clientSecret: config.get('authentication.google.appSecret'),
+    callbackURL: 'https://' + domain + '/auth/google/callback'
+}, function(token, tokenSecret, profile, done) {
+    var rawdata = profile._json;
+    var user = createUser('google', rawdata.emails[0].value, rawdata.displayName, rawdata.image.url, 
+                          [ rawdata.domain ], rawdata);
+    done(null, user);
+});
+
+// Configure GitHub auth
+var github = new GitHubStrategy({
+    clientID: config.get('authentication.github.appId'),
+    clientSecret: config.get('authentication.github.appSecret'),
+    callbackURL: 'https://' + domain + '/auth/github/callback'
+}, function(accessToken, refreshToken, profile, done) {
+    // Custom strategy returns raw JSON data as profile
+    var orgs = _.map(profile.orgs, 'login');
+    var user = createUser('github', profile.email, profile.name, profile.avatar_url, orgs, profile);
+    done(null, user);
+});
+
+// Tell passport to use our strategies
+passport.use(google);
+passport.use(github);
+
+
+// Returns middleware that authenticates a user or handles authentication-related tasks
 module.exports = function authentication(setupRoutes) {
-    // If we're not setting up routes, we just need everyauth middleware that will pull any
-    // authentication information out of the session
+    // If we're not setting up routes, we just need the passport initialize and session middleware
     if (!setupRoutes) {
-        return everyauth.middleware({ autoSetupRoutes: false });
+        return [ passport.initialize(), passport.session(), addUserToResponseLocals ];
     }
     
-    // Where to redirect a user after a successful login
-    var postLoginPath = '/auth/postLogin';
+    // Setup routes for authentication
+    var loginPath = config.get('authentication.loginPath');
+    var postLoginPath = '/auth/postlogin';
+    var loginRedirectOpts = {
+        successRedirect: postLoginPath,
+        failureRedirect: loginPath
+    };
     
-    // Otherwise, we need to do some configuration and setup the routes
-    
-    
-    // Setup Google OAuth 2 authentication
-    everyauth.google
-        .appId(config.get('authentication.google.appId'))
-        .appSecret(config.get('authentication.google.appSecret'))
-        .scope('email')
-        .findOrCreateUser(function(session, accessToken, accessTokenExtra, googleUserMetadata) {
-            return createUserAndLog('google', googleUserMetadata.email, googleUserMetadata);
-        })
-        .redirectPath(postLoginPath);
-            
-    // Setup GitHub OAuth authentication
-    everyauth.github
-        .appId(config.get('authentication.github.appId'))
-        .appSecret(config.get('authentication.github.appSecret'))
-        .scope('user:email,read:org')
-        .findOrCreateUser(function(session, accessToken, accessTokenExtra, githubUserMetadata) {
-            // Create the user from the data that comes back in the initial metadata
-            var user = createUserAndLog('github', githubUserMetadata.email, githubUserMetadata);
-            
-            // GitHub doesn't return orgs in the initial metadata, so we need to make a 2nd call to get them
-            var p = this.Promise();
-            this.oauth.get(this.apiHost() + '/user/orgs', accessToken, function(err, data) {
-                if (err) return p.fail(err);
-                
-                // Store the orgs along with the auth info in session
-                var orgs = JSON.parse(data);
-                session.auth = session.auth || {};
-                session.auth.github = session.auth.github || {};
-                session.auth.github.orgs = _.map(orgs, 'login');    // Use the login property of the returned orgs
-                p.fulfill(user);
-            });
-            return p;
-        })
-        .redirectPath(postLoginPath);
-    
-    // Lookup user information by just calling back with the userId
-    everyauth.everymodule.findUserById(function(userId, callback) {
-        callback(userId);
-    });
-    
-    // Create a router to handle custom login routes or handoff to the express middleware
     var router = express.Router();
     
-    // Page for user to select how to login
-    router.get(config.get('authentication.loginPath'), function(req, res, next) {
+    // Use passport to authenticate users on these routes
+    router.get('/auth/google', passport.authenticate('google', { scope: [ 'email', 'profile' ] }));
+    router.get('/auth/google/callback', passport.authenticate('google', loginRedirectOpts));
+    router.get('/auth/github', passport.authenticate('github', { scope: [ 'user:email', 'read:org'] }));
+    router.get('/auth/github/callback', passport.authenticate('github', loginRedirectOpts));
+    
+    // View for selecting how to login
+    router.get(loginPath, function(req, res, next) {
         // If there is a parameter specifying where to go after login, save it in a cookie
         var redirectAfterLogin = req.query.redirectAfterLogin;
         if (redirectAfterLogin) {
@@ -96,8 +112,38 @@ module.exports = function authentication(setupRoutes) {
         }
     });
     
-    // Allow the everyauth middleware and its routes to handle requests
-    router.use(everyauth.middleware());
+    // Logout handler
+    router.get('/auth/logout', function(req, res, next) {
+        req.logout();
+        res.redirect(loginPath);
+    });
     
-    return router;
+    return [
+        passport.initialize(),
+        passport.session(),
+        router,
+        addUserToResponseLocals
+    ];
+    
+    
+        /*
+        .findOrCreateUser(function(session, accessToken, accessTokenExtra, githubUserMetadata) {
+            // Create the user from the data that comes back in the initial metadata
+            var user = createUserAndLog('github', githubUserMetadata.email, githubUserMetadata);
+            
+            // GitHub doesn't return orgs in the initial metadata, so we need to make a 2nd call to get them
+            var p = this.Promise();
+            this.oauth.get(this.apiHost() + '/user/orgs', accessToken, function(err, data) {
+                if (err) return p.fail(err);
+                
+                // Store the orgs along with the auth info in session
+                var orgs = JSON.parse(data);
+                session.auth = session.auth || {};
+                session.auth.github = session.auth.github || {};
+                session.auth.github.orgs = _.map(orgs, 'login');    // Use the login property of the returned orgs
+                p.fulfill(user);
+            });
+            return p;
+        })
+        */
 };

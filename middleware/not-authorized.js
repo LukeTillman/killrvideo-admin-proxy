@@ -20,7 +20,7 @@ module.exports = function notAuthorized() {
         }
         
         // If they aren't logged in, remember where they were trying to go and redirect them to the login page
-        if (req.loggedIn !== true) {
+        if (req.isAuthenticated() !== true) {
             var redirectQs = qs.stringify({ redirectAfterLogin: req.protocol + '://' + req.get('host') + req.originalUrl });
             res.redirect(loginUrl + '?' + redirectQs);
             return;

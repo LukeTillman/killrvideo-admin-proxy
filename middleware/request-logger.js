@@ -15,17 +15,11 @@ var fileLogger = bunyan.createLogger({
     serializers: {
         // Customize request serialization so we only include auth information if present
         req: function serializeRequest(req) {
-            var reqInfo = {
+            return {
                 hostname: req.hostname,
                 subdomains: req.subdomains,
-                loggedIn: false,
-                userId: null
+                user: req.user
             };
-            if (req.session && req.session.auth) {
-                reqInfo.loggedIn = req.session.auth.loggedIn;
-                reqInfo.userId = req.session.auth.userId;
-            }
-            return reqInfo;
         }
     },
     streams: [{

@@ -7,7 +7,6 @@
   },
   "dependencies": {
     "jade": "~1.9.2",
-    "everyauth": "^0.4.9",
     "vhost": "^3.0.0",
     "express-session": "^1.11.2",
     "http-proxy": "^1.11.1",
@@ -20,7 +19,10 @@
     "serve-favicon": "^2.3.0",
     "config": "^1.14.0",
     "json5": "^0.4.0",
-    "mkdirp": "^0.5.1"
+    "mkdirp": "^0.5.1",
+    "passport": "^0.2.2",
+    "passport-google-oauth": "^0.2.0",
+    "passport-oauth2": "^1.1.2"
   },
   "devDependencies": {
     "bunyan-format": "^0.2.1",

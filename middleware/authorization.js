@@ -1,22 +1,23 @@
 var _ = require('lodash');
 
 function isAuthorized(req) {
-    // Users who aren't logged in aren't authorized
-    if (!req.session.auth) {
+    // No authentication means not allowed in
+    if (req.isAuthenticated() !== true) {
         return false;
-    } 
-    
-    // Check Google logins
-    if (req.session.auth.google && req.session.auth.google.user.hd === 'datastax.com') {
-        return true;
     }
     
-    // Check GitHub logins
-    if (req.session.auth.github && _.intersection(req.session.auth.github.orgs, ['riptano', 'datastax']).length > 0) {
-        return true;
+    var allowedGroups = [];
+    switch(req.user.provider) {
+        case 'google':
+            allowedGroups = [ 'datastax.com' ];
+            break;
+        case 'github':
+            allowedGroups = [ 'riptano', 'datastax' ];
+            break;
     }
-    
-    return false;
+
+    // See if the user is in one of the allowed groups    
+    return _.intersection(req.user.groups, allowedGroups).length > 0;
 }
 
 var notAuthorizedToken = { message: 'Not authorized' };

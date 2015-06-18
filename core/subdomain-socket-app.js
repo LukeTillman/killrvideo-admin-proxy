@@ -5,6 +5,7 @@ var ServerResponse = require('http').ServerResponse;
 var requestLogger = require('../middleware/request-logger');
 var subdomainVerify = require('../middleware/subdomain-verify');
 var session = require('../middleware/session');
+var authentication = require('../middleware/authentication');
 var authorization = require('../middleware/authorization');
 var subdomainProxy = require('../middleware/subdomain-proxy');
 var errorLogger = require('../middleware/error-logger');
@@ -17,6 +18,7 @@ module.exports = function subdomainSocketApp() {
     app.use(requestLogger());
     app.use(subdomainVerify());
     app.use(session());
+    app.use(authentication(false));
     app.use(authorization());
     
     // Proxy the web socket

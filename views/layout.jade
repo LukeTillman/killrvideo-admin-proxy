@@ -18,7 +18,7 @@ html
                 // Header and toggle for navbar collapse
                 .navbar-header
                     // Collapse toggle when authenticated
-                    if everyauth && everyauth.loggedIn === true
+                    if user
                         button.navbar-toggle.collapsed(type='button', data-toggle='collapse', data-target='#main-nav-collapse')
                             span.sr-only Toggle Navigation
                             span.icon-bar
@@ -29,21 +29,15 @@ html
                         img(alt='KillrVideo Logo', src=domainUrl('/images/killrvideo-bw.png'))
                         | Admin Proxy
                 // Collapsible elements for logging out when user is authenticated
-                if everyauth && everyauth.loggedIn === true
+                if user
                     #main-nav-collapse.collapse.navbar-collapse
                         ul.nav.navbar-nav.navbar-right
                             li.dropdown
                                 a.dropdown-toggle(href='#', data-toggle='dropdown', role='button')
-                                    if everyauth.google
-                                        img.img-circle.profile-image(src=everyauth.google.user.picture)
-                                        | #{everyauth.google.user.name} 
-                                    else if everyauth.github
-                                        img.img-circle.profile-image(src=everyauth.github.user.avatar_url)
-                                        | #{everyauth.github.user.name} 
-                                    else
-                                        | #{everyauth.userId} 
+                                    img.img-circle.profile-image(src=user.picture)
+                                    | #{user.name} 
                                     span.caret
                                 ul.dropdown-menu(role='menu')
-                                    li: a(href=domainUrl('/logout')) Sign Out
+                                    li: a(href=domainUrl('/auth/logout')) Sign Out
         .container
             block content
