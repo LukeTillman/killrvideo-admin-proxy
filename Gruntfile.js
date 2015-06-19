@@ -82,6 +82,19 @@ module.exports = function(grunt) {
             }
         },
         
+        // Compress files for a release
+        compress: {
+            release: {
+                options: {
+                    archive: './.dist/killrvideo-admin-proxy.zip'
+                },
+                files: [
+                    { expand: true, src: 'core/**', dest: '' },
+                    { src: '*.js*', dest: '' }
+                ]
+            }
+        },
+        
         // Launch an express server
         express: {
             options: { 
@@ -127,6 +140,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-bower-concat');
     grunt.loadNpmTasks('grunt-express-server');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-compress');
     
     // Custom tasks
     grunt.registerTask('init', 'Prepare the project for development', 
@@ -139,8 +153,14 @@ module.exports = function(grunt) {
     grunt.registerTask('bower_assets', 'Generates bower assets', 
         [ 'bower_concat:all', 'copy:bower_assets' ]);
         
+    grunt.registerTask('build', 'Builds assets', 
+        [ 'bower_assets', 'copy:config', 'copy:certs' ]);
+        
     grunt.registerTask('default', 'Build assets for development', 
-        [ 'set_configuration:dev', 'bower_assets', 'copy:config', 'copy:certs' ]);
+        [ 'set_configuration:dev', 'build' ]);
+        
+    grunt.registerTask('release', 'Build and package assets for a release', 
+        [ 'set_configuration:release', 'build', 'compress:release' ]);
     
     grunt.registerTask('dev', 'Dev mode: watches files and restarts server on changes', 
         [ 'default', 'express:dev', 'watch' ]);
