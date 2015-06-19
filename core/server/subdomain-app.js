@@ -3,17 +3,17 @@ var express = require('express');
 var config = require('config');
 
 // Middleware
-var requestLogger = require('../middleware/request-logger');
-var cookies = require('../middleware/cookies');
-var session = require('../middleware/session');
-var authentication = require('../middleware/authentication');
-var authorization = require('../middleware/authorization');
-var subdomainVerify = require('../middleware/subdomain-verify')
-var subdomainRedirectRoot = require('../middleware/subdomain-redirect-root');
-var subdomainProxy = require('../middleware/subdomain-proxy');
-var notAuthorized = require('../middleware/not-authorized');
-var errorLogger = require('../middleware/error-logger');
-var errorHandler = require('../middleware/error-handler');
+var requestLogger = require('./middleware/request-logger');
+var cookies = require('./middleware/cookies');
+var session = require('./middleware/session');
+var authentication = require('./middleware/authentication');
+var authorization = require('./middleware/authorization');
+var subdomainVerify = require('./middleware/subdomain-verify')
+var subdomainRedirectRoot = require('./middleware/subdomain-redirect-root');
+var subdomainProxy = require('./middleware/subdomain-proxy');
+var notAuthorized = require('./middleware/not-authorized');
+var errorLogger = require('./middleware/error-logger');
+var errorHandler = require('./middleware/error-handler');
 
 // Function for creating the app that serves regular requests to subdomains
 // (i.e. not web socket requests)
@@ -29,7 +29,7 @@ module.exports = function subdomainApp() {
     app.set('subdomain offset', domainParts.length);
     
     // Setup the view engine so the subdomain can show error handler views
-    app.set('views', path.join(__dirname, '../views'));
+    app.set('views', path.join(__dirname, './views'));
     app.set('view engine', 'jade');
     
     // Log requests

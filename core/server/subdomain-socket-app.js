@@ -2,13 +2,13 @@ var express = require('express');
 var ServerResponse = require('http').ServerResponse;
 
 // Express middleware
-var requestLogger = require('../middleware/request-logger');
-var subdomainVerify = require('../middleware/subdomain-verify');
-var session = require('../middleware/session');
-var authentication = require('../middleware/authentication');
-var authorization = require('../middleware/authorization');
-var subdomainProxy = require('../middleware/subdomain-proxy');
-var errorLogger = require('../middleware/error-logger');
+var requestLogger = require('./middleware/request-logger');
+var subdomainVerify = require('./middleware/subdomain-verify');
+var session = require('./middleware/session');
+var authentication = require('./middleware/authentication');
+var authorization = require('./middleware/authorization');
+var subdomainProxy = require('./middleware/subdomain-proxy');
+var errorLogger = require('./middleware/error-logger');
 
 // Function that creates an "app" capable of handling upgrade requests for web sockets
 // and proxying them to subdomains

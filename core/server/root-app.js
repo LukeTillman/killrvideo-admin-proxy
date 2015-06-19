@@ -5,19 +5,19 @@ var _ = require('lodash');
 
 // Middleware
 var favicon = require('serve-favicon');
-var requestLogger = require('../middleware/request-logger');
-var subdomainProxy = require('../middleware/subdomain-proxy');
-var cookies = require('../middleware/cookies');
-var session = require('../middleware/session');
-var authentication = require('../middleware/authentication');
-var authorization = require('../middleware/authorization');
-var notAuthorized = require('../middleware/not-authorized');
-var errorLogger = require('../middleware/error-logger');
-var errorHandler = require('../middleware/error-handler');
+var requestLogger = require('./middleware/request-logger');
+var subdomainProxy = require('./middleware/subdomain-proxy');
+var cookies = require('./middleware/cookies');
+var session = require('./middleware/session');
+var authentication = require('./middleware/authentication');
+var authorization = require('./middleware/authorization');
+var notAuthorized = require('./middleware/not-authorized');
+var errorLogger = require('./middleware/error-logger');
+var errorHandler = require('./middleware/error-handler');
 
 // Function that returns an express app for handling requests on the root of
 // the site (i.e. no subdomains)
-module.exports = function rootApp() {
+module.exports = function rootApp(staticPaths) {
     // The main express app
     var app = express();
     
@@ -30,7 +30,7 @@ module.exports = function rootApp() {
     app.set('subdomain offset', domainParts.length);
     
     // Setup the view engine
-    app.set('views', path.join(__dirname, '../views'));
+    app.set('views', path.join(__dirname, './views'));
     app.set('view engine', 'jade');
     
     // Serve favicon requests
@@ -40,7 +40,9 @@ module.exports = function rootApp() {
     app.use(requestLogger());
     
     // Static content
-    app.use(express.static(path.join(__dirname, '../public')));
+    _.forEach(staticPaths, function(val) {
+        app.use(express.static(val));
+    });
     
     // Enable cookie parsing
     app.use(cookies());

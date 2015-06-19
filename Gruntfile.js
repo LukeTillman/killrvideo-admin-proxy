@@ -1,9 +1,16 @@
+/// <reference path="typings/node/node.d.ts"/>
 var path = require('path');
 
 module.exports = function(grunt) {
     
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        
+        // Output path for "built" assets
+        builtPath: __dirname + '/core/built',
+        
+        // Set by the set_configuration task
+        currentConfiguration: {},
         
         // Shell tasks
         shell: {
@@ -18,7 +25,7 @@ module.exports = function(grunt) {
         },
         
         // Custom task for specifying configuration
-        build: {
+        set_configuration: {
             dev: {
                 environmentName: 'dev'
             },
@@ -29,23 +36,28 @@ module.exports = function(grunt) {
         
         // Copy files to the correct locations
         copy: {
+            // Copy config files
             config: {
                 nonull: true,
-                src: 'config/<%= build.current.environmentName %>.json5',
-                dest: 'config/local.json5'
-            },
-            
-            certs: {
-                nonull: true,
                 files: [
-                    { src: 'certs/<%= build.current.environmentName %>.key.pem', dest: 'certs/key.pem' },
-                    { src: 'certs/<%= build.current.environmentName %>.cert.pem', dest: 'certs/cert.pem' }
+                    { src: 'config/default.json5', dest: '<%= builtPath %>/config/default.json5' },
+                    { src: 'config/<%= currentConfiguration.environmentName %>.json5', dest: '<%= builtPath %>/config/local.json5' }
                 ]
             },
             
-            assets: {
+            // Copy SSL certs
+            certs: {
+                nonull: true,
                 files: [
-                    { expand: true, cwd: 'bower_components/font-awesome/fonts/', src: '*', dest: 'public/fonts/' }
+                    { src: 'certs/<%= currentConfiguration.environmentName %>.key.pem', dest: '<%= builtPath %>/certs/key.pem' },
+                    { src: 'certs/<%= currentConfiguration.environmentName %>.cert.pem', dest: '<%= builtPath %>/certs/cert.pem' }
+                ]
+            },
+            
+            // Copy bower assets that aren't covered by bower_concat
+            bower_assets: {
+                files: [
+                    { expand: true, cwd: 'bower_components/font-awesome/fonts/', src: '*', dest: '<%= builtPath %>/public/fonts/' }
                 ]
             }
             // TODO: Copy build output for packaging?
@@ -54,8 +66,8 @@ module.exports = function(grunt) {
         // Concatenate bower dependencies
         bower_concat: {
             all: {
-                dest: __dirname + '/public/js/bower.js',
-                cssDest: __dirname + '/public/css/bower.css',
+                dest: '<%= builtPath %>/public/js/bower.js',
+                cssDest: '<%= builtPath %>/public/css/bower.css',
                 mainFiles: {
                     bootstrap: [
                         // Can go back to default theme by removing bootswatch and bringing these back
@@ -73,7 +85,7 @@ module.exports = function(grunt) {
         // Launch an express server
         express: {
             options: { 
-                script: 'app.js',
+                script: 'index.js',
                 output: '.+Listening on.+',
                 debug: true
             },
@@ -86,16 +98,22 @@ module.exports = function(grunt) {
         watch: {
             // Watch for changes to the server code and reload express
             express: {
-                files: [ '**/*.js', '!public/js/*.js', '!Gruntfile.js' ],
+                files: [ 'core/server/**/*.js', 'core/built/config/*.*' ],
                 tasks: [ 'express:dev' ],
                 options: {
                     spawn: false
                 }
             },
+            
+            // Watch for changes to configs and re-copy
+            configs: {
+                files: [ 'config/*.json5' ],
+                tasks: [ 'set_configuration:dev', 'copy:config' ]
+            },
                         
-            // Enable live reload on changes to public assets
+            // Enable live reload on changes
             livereload: {
-                files: [ 'public/**/*.*', 'views/**/*.jade' ],
+                files: [ 'core/public/**/*.*', 'core/built/public/**/*.*', 'core/server/views/**/*.jade' ],
                 options: {
                     livereload: true
                 }
@@ -113,15 +131,16 @@ module.exports = function(grunt) {
     // Custom tasks
     grunt.registerTask('init', 'Prepare the project for development', 
         [ 'shell:bower', 'default' ]);
-    
-    grunt.registerMultiTask('build', 'Builds assets for development or release', function() {
-        grunt.config.set('build.current', this.data);
         
-        // Build is just an alias for other tasks once configuration has been set
-        grunt.task.run([ 'bower_concat:all', 'copy:config', 'copy:assets', 'copy:certs' ]);
+    grunt.registerMultiTask('set_configuration', 'Sets some configuration values', function() {
+        grunt.config.set('currentConfiguration', this.data);
     });
     
-    grunt.registerTask('default', 'Build assets for development', [ 'build:dev' ]);
+    grunt.registerTask('bower_assets', 'Generates bower assets', 
+        [ 'bower_concat:all', 'copy:bower_assets' ]);
+        
+    grunt.registerTask('default', 'Build assets for development', 
+        [ 'set_configuration:dev', 'bower_assets', 'copy:config', 'copy:certs' ]);
     
     grunt.registerTask('dev', 'Dev mode: watches files and restarts server on changes', 
         [ 'default', 'express:dev', 'watch' ]);

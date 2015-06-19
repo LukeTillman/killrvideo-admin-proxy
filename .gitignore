@@ -38,9 +38,8 @@ config/*.json5
 bower_components
 
 # Build output
-.build
-public/**/bower.*
-public/fonts
+.dist
+core/built
 
 # Certificates for SSL
 certs/*

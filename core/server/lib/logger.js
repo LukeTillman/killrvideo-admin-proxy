@@ -1,11 +1,11 @@
-/// <reference path="../typings/node/node.d.ts"/>
 var path = require('path');
 var bunyan = require('bunyan');
 var config = require('config');
 var mkdirp = require('mkdirp');
 
 // Log path, resolved from the app.js root
-var logPath = path.resolve(__dirname, '../', config.get('logPath'));
+var rootPath = process.env.APP_ROOT_PATH || __dirname;
+var logPath = path.resolve(rootPath, config.get('logPath'));
 mkdirp.sync(logPath);
 
 // Log to a file with a custom format for req/res objects
@@ -51,3 +51,6 @@ if (config.get('isDevelopment')) {
 
 // Main app logger
 module.exports = bunyan.createLogger(loggerConfig);
+
+// Also export the log path
+module.exports.logPath = logPath;
