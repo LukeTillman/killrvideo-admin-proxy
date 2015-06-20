@@ -4,7 +4,7 @@ var adminProxy = require('./core');
 
 // Create and start the server
 adminProxy().then(function(server) {
-    server.start();
+    return server.start();
 }).catch(function(err) {
     console.log(err);
     process.exit(1);

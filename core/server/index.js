@@ -1,35 +1,38 @@
 var https = require('https');
+var http = require('http');
 var fs = require('fs');
 var express = require('express');
 var vhost = require('vhost');
 var config = require('config');
 var Promise = require('bluebird');
 
+var Server = require('./lib/server');
 var logger = require('./lib/logger');
 var rootApp = require('./root-app');
 var subdomainApp = require('./subdomain-app');
 var subdomainSocketApp = require('./subdomain-socket-app');
-
+var redirectApp = require('./redirect-app');
 
 // Main Server class that can be started/stopped
-function Server(expressApp, socketApp, options) {
-    this.expressApp = expressApp;
-    this.socketApp = socketApp;
+function AdminProxyServer(mainExpressApp, options) {
+    this.mainExpressApp = mainExpressApp;
     this.options = options;
+    this.redirectApp = redirectApp;
+    this.socketApp = subdomainSocketApp();
+    this.redirectApp = redirectApp();
     
-    this.httpsServer = null;
     this.bindIp = config.get('bindIp');
-    this.bindPort = config.get('bindPort');
+    this.bindHttpsPort = config.get('bindHttpsPort');
+    this.bindHttpPort = config.get('bindHttpPort');
+    
+    this.httpServer = null;
+    this.httpsServer = null;
 }
 
 // Start the server
-Server.prototype.start = function() {
-    // Already started?
-    if (this.httpsServer !== null) {
-        return Promise.resolve(this);
-    }
-    
-    return Promise.bind(this)
+AdminProxyServer.prototype.start = function() {
+    // Start main server on HTTPS port
+    var startHttpsServer = Promise.bind(this)
         .then(function() {
             var readFileAsync = Promise.promisify(fs.readFile);
             return [
@@ -38,53 +41,64 @@ Server.prototype.start = function() {
             ];
         })
         .spread(function(key, cert) {
+            
             // Create the server and handle websocket upgrade requests
             var server = https.createServer({
                 key: key,
                 cert: cert
-            }, this.expressApp);
+            }, this.mainExpressApp);
             server.on('upgrade', this.socketApp);
             
-            var resolve, reject;
-            var p = new Promise(function(fn1, fn2) {
-                resolve = fn1;
-                reject = fn2;
-            });
-            server.on('listening', resolve);
-            server.on('error', reject);
-            this.httpsServer = server;
-            
-            // Start listening
-            this.httpsServer.listen(this.bindPort, this.bindIp);
-            
-            return p;
+            var httpsServer = new Server(server, this.bindHttpsPort, this.bindIp);
+            return httpsServer.start();
         })
+        .then(function(httpsServer) {
+            this.httpsServer = httpsServer;
+        });
+    
+    // Start second server on HTTP port
+    var startHttpServer = Promise.bind(this)
         .then(function() {
-            logger.info('Listening on %s:%d', this.bindIp, this.bindPort);
-            return this;
+            // Create server for redirecting to HTTPS
+            var server = http.createServer(this.redirectApp);
+            var httpServer = new Server(server, this.bindHttpPort, this.bindIp);
+            return httpServer.start();
         })
+        .then(function(httpServer) {
+            this.httpServer = httpServer;
+        });
+    
+    // Wait until both servers are started
+    return Promise.all([ startHttpsServer, startHttpServer ])
+        .bind(this)
+        .then(function() {
+            logger.info('AdminProxyServer successfully started.');
+        })
+        .return(this)
         .catch(function(err) {
-            logger.error(err, 'Failed to bind to %s:%d', this.bindIp, this.bindPort);
-            this.httpsServer = null;
+            // Figure out which server failed and stop the other one
+            var stopServer = this.httpServer === null 
+                ? this.httpsServer.stop() 
+                : this.httpServer.stop();
+            
+            // After the other server is stopped, rethrow
+            return stopServer.throw(err);
         });
 };
 
 // Stops the server
-Server.prototype.stop = function() {
-    if (this.httpsServer === null) {
-        return Promise.resolve(this);
-    }
-    
-    return this.httpsServer
-        .closeAsync()
-        .then(function() {
-            logger.info('Successfully shutdown');
-            return this;
+AdminProxyServer.prototype.stop = function() {
+    return Promise.all([ this.httpsServer.stop(), this.httpServer.stop() ])
+        .bind(this)
+        .return(this)
+        .finally(function() {
+            this.httpsServer = null;
+            this.httpServer = null;
         });
 };
 
 // Restarts the server
-Server.prototype.restart = function() {
+AdminProxyServer.prototype.restart = function() {
     return this.stop().then(function(server) {
         return server.start();
     });
@@ -102,10 +116,7 @@ module.exports = function createServer(options) {
         // All other requests go to the root app
         app.use(rootApp(opt.publicAssetPaths));
         
-        // Create an app for handling websocket requests
-        var socketApp = subdomainSocketApp();
-        
-        return new Server(app, socketApp, opt);
+        return new AdminProxyServer(app, opt);
     }, options);
 };
 

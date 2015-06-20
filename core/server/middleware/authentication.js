@@ -124,26 +124,4 @@ module.exports = function authentication(setupRoutes) {
         router,
         addUserToResponseLocals
     ];
-    
-    
-        /*
-        .findOrCreateUser(function(session, accessToken, accessTokenExtra, githubUserMetadata) {
-            // Create the user from the data that comes back in the initial metadata
-            var user = createUserAndLog('github', githubUserMetadata.email, githubUserMetadata);
-            
-            // GitHub doesn't return orgs in the initial metadata, so we need to make a 2nd call to get them
-            var p = this.Promise();
-            this.oauth.get(this.apiHost() + '/user/orgs', accessToken, function(err, data) {
-                if (err) return p.fail(err);
-                
-                // Store the orgs along with the auth info in session
-                var orgs = JSON.parse(data);
-                session.auth = session.auth || {};
-                session.auth.github = session.auth.github || {};
-                session.auth.github.orgs = _.map(orgs, 'login');    // Use the login property of the returned orgs
-                p.fulfill(user);
-            });
-            return p;
-        })
-        */
 };

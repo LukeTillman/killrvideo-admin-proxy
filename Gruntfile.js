@@ -99,7 +99,7 @@ module.exports = function(grunt) {
         express: {
             options: { 
                 script: 'index.js',
-                output: '.+Listening on.+',
+                output: '.+successfully started',
                 debug: true
             },
             dev: {
