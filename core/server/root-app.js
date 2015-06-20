@@ -36,13 +36,13 @@ module.exports = function rootApp(staticPaths) {
     // Serve favicon requests
     app.use(favicon(path.join(__dirname, '../public') + '/favicon.ico'));
     
-    // Log requests
-    app.use(requestLogger());
-    
     // Static content
     _.forEach(staticPaths, function(val) {
         app.use(express.static(val));
     });
+    
+    // Log requests
+    app.use(requestLogger());
     
     // Enable cookie parsing
     app.use(cookies());
